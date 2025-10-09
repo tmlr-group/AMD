@@ -9,4 +9,4 @@ This work is done by
 ## Requirements
 - `python 3.9.0`
 
-The packages in [`environment.yml`](.environment.yml) are required to run our tests and the ones we compare against.
+The packages in [`environment.yml`](./environment.yml) are required to run our tests and the ones we compare against.
