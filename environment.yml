@@ -1,4 +1,4 @@
-name: MAD
+name: AMD
 channels:
   - pytorch
   - nvidia
