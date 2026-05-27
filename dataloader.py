@@ -157,16 +157,25 @@ def sample_HDGM(N, rs, per, scale):
     """#Feat. 10  # Inst. inf"""
     d = 10 # data dim
     Num_clusters = 2  # number of modes
-    n = int(N / Num_clusters)
+    def cluster_counts(total):
+        counts = np.full(Num_clusters, total // Num_clusters, dtype=int)
+        counts[: total % Num_clusters] += 1
+        return counts
+
     mu_mx = np.zeros([Num_clusters, d])
     mu_mx[1] = mu_mx[1] + 0.5
     sigma_mx_1 = np.identity(d)
-    X = np.zeros([n * Num_clusters, d])
-    Y = np.zeros([n * Num_clusters, d])
+    X = np.zeros([N, d])
+    Y = np.zeros([N, d])
     # Generate HDGM-D
+    sample_counts = cluster_counts(N)
+    start = 0
     for i in range(Num_clusters):
         np.random.seed(seed=rs + i + 283)
-        X[n * (i):n * (i + 1), :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_1, n)
+        count = sample_counts[i]
+        X[start:start + count, :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_1, count)
+        start += count
+    start = 0
     for i in range(Num_clusters):
         np.random.seed(seed=rs + i)
 
@@ -175,18 +184,24 @@ def sample_HDGM(N, rs, per, scale):
         sigma_mx_2[0][1, 0] = 0.5
         sigma_mx_2[1][0, 1] = -0.5
         sigma_mx_2[1][1, 0] = -0.5
-        Y[n * (i):n * (i + 1), :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_2[i], n)
+        count = sample_counts[i]
+        Y[start:start + count, :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_2[i], count)
+        start += count
         
     LenX = int(N * per)
     LenY = N-LenX
-    nx = LenX // Num_clusters
-    ny = LenY // Num_clusters
+    nx_counts = cluster_counts(LenX)
+    ny_counts = cluster_counts(LenY)
     
-    Z = np.zeros([(nx+ny) * Num_clusters, d])
+    Z = np.zeros([N, d])
     # Generate HDGM-D
+    start = 0
     for i in range(Num_clusters):
         np.random.seed(seed=rs + i + 283)
-        Z[nx * (i):nx * (i + 1), :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_1, nx)
+        count = nx_counts[i]
+        Z[start:start + count, :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_1, count)
+        start += count
+    start = LenX
     for i in range(Num_clusters):
         np.random.seed(seed=rs + i)
         sigma_mx_2 = [np.identity(d), np.identity(d)]
@@ -194,7 +209,9 @@ def sample_HDGM(N, rs, per, scale):
         sigma_mx_2[0][1, 0] = 0.5
         sigma_mx_2[1][0, 1] = -0.5
         sigma_mx_2[1][1, 0] = -0.5
-        Z[LenX + ny * (i): LenX + ny * (i + 1), :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_2[i], ny)
+        count = ny_counts[i]
+        Z[start:start + count, :] = np.random.multivariate_normal(mu_mx[i], sigma_mx_2[i], count)
+        start += count
     np.random.shuffle(Z)
     
     if scale:

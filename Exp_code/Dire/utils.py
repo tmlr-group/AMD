@@ -2,7 +2,18 @@ import numpy as np
 import torch
 from sklearn.utils import check_random_state
 import torch.nn as nn
+import os
+import sys
+
+_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+if _REPO_DIR not in sys.path:
+    sys.path.append(_REPO_DIR)
 from dataloader import load_data
+
+_AMD_CORE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _AMD_CORE_DIR not in sys.path:
+    sys.path.append(_AMD_CORE_DIR)
+from amd_core import select_rst_direction_grid
 
 class ConvNet_CIFAR10(nn.Module):
     def __init__(self):
@@ -386,51 +397,21 @@ def training_Deep(name, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, devi
         return TEMP_ALL[0].item(), [model_u, torch.exp(epsilonOPT)/(1+torch.exp(epsilonOPT)).detach(), sigmaOPT.detach() ** 2, sigma0OPT.detach() ** 2, cst]
 
 def F_selection(name, F_kernel, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, F_select='RST', F_heur ='TST'):
-    if F_select == 'RST':
-        if F_kernel == 'Deep':
-            value1, _= training_Deep(name, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, 1, F_heur)
-            value2, _= training_Deep(name, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, -1, F_heur)
-        else:
-            value1, _ = training(F_kernel, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, 1, F_heur)
-            value2, _ = training(F_kernel, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, -1, F_heur)
-        F = None
-        if value1 < -value2:
-            F = -1
-        elif value1 > -value2:
-            F = 1
-        else:
-            if F_kernel == 'Deep':
-                value, _ = training_Deep(name, N1, X, Y, Z, None, learning_rate, N_epoch, batch_size, device, dtype, None, F_heur)
-            else:
-                value, _ = training(F_kernel, N1, X, Y, Z, None, learning_rate, N_epoch, batch_size, device, dtype, None, F_heur)
-            if value < 0:
-                F = -1
-            elif value > 0:
-                F = 1
-    elif F_select == 'TST':
-        if F_kernel == 'Deep':
-            value, _ = training_Deep(name, N1, X, Y, Z, None, learning_rate, N_epoch, batch_size, device, dtype, None, F_heur)
-        else:
-            value, _ = training(F_kernel, N1, X, Y, Z, None, learning_rate, N_epoch, batch_size, device, dtype, None, F_heur)
-        F = None
-        if value < 0:
-            F = -1
-        elif value > 0:
-            F = 1
-        else:
-            if F_kernel == 'Deep':
-                value1, _= training_Deep(name, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, 1, F_heur)
-                value2, _= training_Deep(name, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, -1, F_heur)
-            else:
-                value1, _ = training(F_kernel, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, 1, F_heur)
-                value2, _ = training(F_kernel, N1, X, Y, Z, C, learning_rate, N_epoch, batch_size, device, dtype, -1, F_heur)
-            if value1 < -value2:
-                F = -1
-            elif value1 > -value2:
-                F = 1
-    if F is None:
+    if F_select == 'Random':
         F = np.random.choice([1, -1])
-    return F
+    else:
+        F, _ = select_rst_direction_grid(
+            X,
+            Y,
+            Z,
+            kernel=F_kernel,
+            seed=1102 + int(N1),
+            max_samples=min(int(N1), 2048),
+            num_bandwidths=15,
+            num_bags=3,
+            top_k=7,
+        )
+    return int(F)
 
 def Ours_method(name, F_kernel, N1, rs, n_test, per, device, dtype, C, learning_rate, N_epoch, batch_size, F_select='RST', F_heur='TST'):
     np.random.seed(seed=1102)
@@ -439,11 +420,12 @@ def Ours_method(name, F_kernel, N1, rs, n_test, per, device, dtype, C, learning_
     H=np.zeros(n_test)
     
     for k in range(n_test):
-        X_train, Y_train, Z_train = load_data(name, N1, rs+k, per)
+        phase1_n = max(int(N1), 2048)
+        X_train, Y_train, Z_train = load_data(name, phase1_n, rs+k, per)
         X_train = MatConvert(X_train, device, dtype)
         Y_train = MatConvert(Y_train, device, dtype)
         Z_train = MatConvert(Z_train, device, dtype)
-        F = F_selection(name, F_kernel, N1, X_train, Y_train, Z_train, C, learning_rate, N_epoch, batch_size, device, dtype, F_select, F_heur)
+        F = F_selection(name, F_kernel, phase1_n, X_train, Y_train, Z_train, C, learning_rate, N_epoch, min(batch_size, phase1_n), device, dtype, F_select, F_heur)
         if per < 0.5:
             H[k] = (F == 1)
         elif per > 0.5:

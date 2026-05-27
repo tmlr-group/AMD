@@ -15,6 +15,9 @@ start_time = time.time()
 parser.add_argument('--perturb_steps',  default=20,           help='perturb_steps')
 parser.add_argument('--loss_fn',    default="cent",           help='loss_fn')
 parser.add_argument('--category',   default="Madry",           help='category')
+parser.add_argument('--net',        default="resnet18",       help='choose from resnet18, resnet34')
+parser.add_argument('--dataset',    default="cifar10",        help='choose from cifar10, svhn')
+parser.add_argument('--model_path', default="./Res18_model/net_150.pth", help='model checkpoint for adversarial data generation')
 
 # parameters of experimental setting
 parser.add_argument('--n_exp',     default=10,              help='Number of experiment runs')
@@ -56,11 +59,13 @@ args = parser.parse_args()
 if args.net == "resnet18":
     model = ResNet18_Fea().to(args.device)
     net = "resnet18"
-if args.net == "resnet34":
-    model = ResNet34_Fea().cuda()
+elif args.net == "resnet34":
+    model = ResNet34_Fea().to(args.device)
     net = "resnet34"
+else:
+    raise ValueError("net must be either 'resnet18' or 'resnet34'.")
 
-ckpt = torch.load(args.model_path)
+ckpt = torch.load(args.model_path, map_location=args.device)
 model.load_state_dict(ckpt)
 
 np.random.seed(seed=1102)
@@ -82,7 +87,17 @@ for i in range(20):
 del Z
 
 eps = args.epss[3]
-Y=adv_generator(args.perturb_steps, epsilon=eps/255, step_size=eps/255/20,loss_fn=args.loss_fn, category=args.category).detach().to(args.device)
+Y = adv_generator(
+    args.perturb_steps,
+    epsilon=eps/255,
+    step_size=eps/255/20,
+    loss_fn=args.loss_fn,
+    category=args.category,
+    net=args.net,
+    dataset=args.dataset,
+    model_path=args.model_path,
+    device=args.device,
+).detach().to(args.device)
 Y_Fea = torch.zeros(ww.shape).to(args.device)
 for i in range(20):
     Y_Fea[i*500:(i+1)*500] = model(Y[i*500:(i+1)*500]).detach().to(args.device).reshape(500,-1) * ww[i*500:(i+1)*500].detach()
@@ -95,7 +110,17 @@ Final_results_P = np.zeros(Final_results.shape)
 
 for dd in range(len(args.N1)):
     eps = args.epss[dd]
-    X = adv_generator(args.perturb_steps, epsilon=eps/255, step_size=eps/255/20, loss_fn=args.loss_fn, category=args.category).detach().to(args.device)
+    X = adv_generator(
+        args.perturb_steps,
+        epsilon=eps/255,
+        step_size=eps/255/20,
+        loss_fn=args.loss_fn,
+        category=args.category,
+        net=args.net,
+        dataset=args.dataset,
+        model_path=args.model_path,
+        device=args.device,
+    ).detach().to(args.device)
     X_Fea = torch.zeros(ww.shape).to(args.device)
     for i in range(20):
         X_Fea[i*500:(i+1)*500] = model(X[i*500:(i+1)*500]).detach().to(args.device).reshape(500,-1) * ww[i*500:(i+1)*500].detach()

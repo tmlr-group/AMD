@@ -1,0 +1,13 @@
+dataset,sample_size,pilot_sample_size,per,expected_direction,direction_accuracy,positive_direction_rate,negative_direction_rate,mean_bag_agreement,mean_selected_score,selected_kernel_counts
+BLOB,60,2048,0.3,1,1.0,1.0,0.0,1.0,4.404126882553101,"{'Laplace': 4, 'Gaussian': 1}"
+BLOB,60,2048,0.7,-1,1.0,0.0,1.0,1.0,4.298534107208252,{'Laplace': 5}
+BLOB,120,2048,0.3,1,1.0,1.0,0.0,1.0,4.123785352706909,"{'Laplace': 4, 'Gaussian': 1}"
+BLOB,120,2048,0.7,-1,1.0,0.0,1.0,1.0,3.774547576904297,{'Laplace': 5}
+BLOB,200,2048,0.3,1,1.0,1.0,0.0,1.0,2.748989152908325,{'Laplace': 5}
+BLOB,200,2048,0.7,-1,1.0,0.0,1.0,1.0,4.09078197479248,{'Laplace': 5}
+HDGM,60,2048,0.3,1,1.0,1.0,0.0,1.0,16.12596321105957,"{'Laplace': 2, 'Gaussian': 3}"
+HDGM,60,2048,0.7,-1,1.0,0.0,1.0,1.0,15.979770851135253,"{'Gaussian': 1, 'Laplace': 4}"
+HDGM,120,2048,0.3,1,1.0,1.0,0.0,1.0,16.226177597045897,{'Laplace': 5}
+HDGM,120,2048,0.7,-1,1.0,0.0,1.0,1.0,15.972993659973145,"{'Laplace': 4, 'Gaussian': 1}"
+HDGM,200,2048,0.3,1,1.0,1.0,0.0,1.0,16.219034576416014,{'Laplace': 5}
+HDGM,200,2048,0.7,-1,1.0,0.0,1.0,1.0,16.190966415405274,{'Laplace': 5}

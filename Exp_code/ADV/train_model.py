@@ -109,40 +109,26 @@ def ResNet18_Fea():
     return ResNet_Fea(ResidualBlock, [2,2,2,2])
 
 def ResNet34_Fea():
-    return ResNet(ResidualBlock, [3,4,6,3])
+    return ResNet_Fea(ResidualBlock, [3,4,6,3])
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# parameter setting
-parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-parser.add_argument('--outf', default='./Res18_model', help='folder to output images and model checkpoints') #The save path of the output model
-args = parser.parse_args()
-
-# Hyperparameter setting
-EPOCH = 150   #Number of times to traverse the dataset
-pre_epoch = 0  #Defines the number of times a dataset has been traversed
-BATCH_SIZE = 128      #Batch size (batch size)
-LR = 0.01        #learning rate 
-
-#transform_test = transforms.Compose((transforms.Resize(64), transforms.ToTensor()))
-
-transform_test = transforms.Compose([transforms.ToTensor(),])
-# Prepare data sets and process them
-
-#Cifar-10
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_test) #training dataset
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=False, num_workers=0)   #Generate batch by batch for batch training, and the order of composition batch is shuffled
-testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=0)
-'''
-#SVHN
-trainset = torchvision.datasets.SVHN(root='./data', split='train', download=True, transform=transform_test) #training dataset
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=False, num_workers=0)   #Generate batch by batch for batch training, and the order of composition batch is shuffled
-testset = torchvision.datasets.SVHN(root='./data', split='test', download=True, transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=0)
-'''
-# train
 if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+    parser.add_argument('--outf', default='./Res18_model', help='folder to output images and model checkpoints')
+    args = parser.parse_args()
+
+    EPOCH = 150
+    pre_epoch = 0
+    BATCH_SIZE = 128
+    LR = 0.01
+
+    transform_test = transforms.Compose([transforms.ToTensor(),])
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_test)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
+
     # define-ResNet
     #net = ResNet34().to(device)
     net = ResNet18().to(device)
