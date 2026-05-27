@@ -164,14 +164,3 @@ AMD has two phases in this codebase:
 
 The adversarial utilities were cleaned so importing `train_model.py` or
 `adv_generator.py` no longer parses command-line arguments or downloads data.
-
-## Citation
-
-```bibtex
-@inproceedings{zhou2025anchor,
-  title={Anchor-based Maximum Discrepancy for Relative Similarity Testing},
-  author={Zhou, Zhijian and Peng, Liuhua and Tian, Xunye and Liu, Feng},
-  booktitle={NeurIPS},
-  year={2025}
-}
-```
